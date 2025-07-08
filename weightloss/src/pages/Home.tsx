@@ -1,44 +1,71 @@
-import React, { useEffect, useState} from 'react';
+import React, { useEffect, useState } from "react";
 
-const Home: React.FC = () => {
-    const [weights, setWeights] = useState<number[]>([]);
-    const [input, setInput] = useState<string>('');
+type WeightEntry = {
+  id: number;
+  weight: number;
+  date: string;
+};
 
-    useEffect (() => {
-        const stored = localStorage.getItem('weights');
-        if (stored) setWeights(JSON.parse(stored));
-     }, []);
+const Home = () => {
+  const [entries, setEntries] = useState<WeightEntry[]>([]);
+  const [weightInput, setWeightInput] = useState("");
+  const [dateInput, setDateInput] = useState("");
 
-    useEffect(() => {
-        localStorage.setItem('weights', JSON.stringify(weights));
-    }, [weights]);
-    
-    const handleAdd = () => {
-        if (!input) return;
-        setWeights([...weights, parseFloat(input)]);
-        setInput('');
+  // Load from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("weightEntries");
+    if (stored) setEntries(JSON.parse(stored));
+  }, []);
+
+  // Save to localStorage
+  useEffect(() => {
+    localStorage.setItem("weightEntries", JSON.stringify(entries));
+  }, [entries]);
+
+  const handleAdd = () => {
+    if (!weightInput || !dateInput) return;
+
+    const newEntry: WeightEntry = {
+      id: Date.now(),
+      weight: parseFloat(weightInput),
+      date: dateInput,
     };
 
-    return (
-        <div>
-            <h1>Weight Tracker</h1>
-            <input 
-                type="number"
-                placeholder="Enter weight"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-            />
-        <button onClick={handleAdd}>Add</button>
-            <h2>Recorded Weights</h2>
-            <ul>
-                {weights.map((w, i) => (
-                    <li key={i}>{w} kg</li>
-                ))}
-            </ul>
+    setEntries([...entries, newEntry]);
+    setWeightInput("");
+    setDateInput("");
+  };
 
-        </div>
+  const handleDelete = (id: number) => {
+    setEntries(entries.filter((entry) => entry.id !== id));
+  };
 
-    );
+  return (
+    <div>
+      <h1>Weight Tracker</h1>
+      <input
+        type="number"
+        placeholder="Weight"
+        value={weightInput}
+        onChange={(e) => setWeightInput(e.target.value)}
+      />
+      <input
+        type="date"
+        value={dateInput}
+        onChange={(e) => setDateInput(e.target.value)}
+      />
+      <button onClick={handleAdd}>Add Entry</button>
+
+      <ul>
+        {entries.map((entry) => (
+          <li key={entry.id}>
+            {entry.date}: {entry.weight} kg{" "}
+            <button onClick={() => handleDelete(entry.id)}>❌</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 };
 
 export default Home;
