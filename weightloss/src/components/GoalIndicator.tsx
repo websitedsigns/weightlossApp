@@ -1,31 +1,45 @@
+import React from "react";
 
 interface Props {
-  goalWeight: string;
+  goalWeight: { value: string; unit: "kg" | "lbs" } | null;
   unit: "kg" | "lbs";
   currentWeight: number | undefined;
-  convert: (w: number, to: "kg" | "lbs") => string;
+  toKg: (val: number) => number;
+  toLbs: (val: number) => number;
 }
 
-const GoalIndicator = ({ goalWeight, unit, currentWeight, convert }: Props) => {
+const GoalIndicator = ({
+  goalWeight,
+  unit,
+  currentWeight,
+  toKg,
+  toLbs,
+}: Props) => {
   if (!goalWeight || currentWeight === undefined) return null;
 
-  const diff = Math.abs(
-    (unit === "kg"
-      ? currentWeight
-      : parseFloat(convert(currentWeight, "lbs"))) - parseFloat(goalWeight)
-  ).toFixed(1);
+  const goalVal = parseFloat(goalWeight.value);
+  if (isNaN(goalVal)) return null;
+
+  // Convert goal and current to same unit for comparison
+  let goalInCurrentUnit =
+    goalWeight.unit === unit
+      ? goalVal
+      : unit === "kg"
+      ? toKg(goalVal)
+      : toLbs(goalVal);
+
+  let currentInCurrentUnit = currentWeight;
+
+  const diff = (currentInCurrentUnit - goalInCurrentUnit).toFixed(1);
 
   return (
-    <div className="alert alert-info">
-      Current:{" "}
-      {unit === "kg"
-        ? `${currentWeight} kg`
-        : `${convert(currentWeight, "lbs")} lbs`}
-      {" — "}
-      Goal: {goalWeight} {unit}
+    <div className="alert alert-info my-3">
+      🎯 Current Weight: {currentInCurrentUnit.toFixed(1)} {unit} — Goal Weight:{" "}
+      {goalInCurrentUnit.toFixed(1)} {unit}
       <br />
-      You are {diff} {unit} away from your goal.
-      
+      {diff > 0
+        ? `You're ${diff} ${unit} above your goal. Keep going!`
+        : `You've reached or passed your goal! 🎉`}
     </div>
   );
 };
